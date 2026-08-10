@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="hi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>एकान्त राग — रात्रिकालीन धुन</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="bg" style="background-image:url('bg.jpg')"></div>
+  <div class="vignette"></div>
+
+  <!-- top bar -->
+  <header class="topbar">
+    <div class="listeners" id="listenersBadge" aria-live="polite">
+      <span class="listeners__dot"></span>
+      <span id="listenersCount">—</span>
+      <span class="listeners__label">listening now</span>
+    </div>
+
+    <a class="yt-music-btn" id="ytMusicBtn" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <circle cx="12" cy="12" r="12" fill="#FF0000" />
+        <circle cx="12" cy="12" r="7.2" fill="#fff" />
+        <circle cx="12" cy="12" r="2.6" fill="#FF0000" />
+      </svg>
+      <span>YouTube Music</span>
+    </a>
+  </header>
+
+  <main class="stage"></main>
+
+  <!-- floating player card -->
+  <footer class="player" role="region" aria-label="Shared audio player">
+    <div class="player__card">
+      <div class="player__video">
+        <div id="ytPlayer"></div>
+        <div class="player__video-scrim" aria-hidden="true"></div>
+      </div>
+
+      <div class="player__main">
+        <div class="player__meta">
+          <span class="player__eyebrow">एकान्त राग · लाइव स्ट्रीम</span>
+          <span class="player__title" id="trackTitle">Connecting…</span>
+          <span class="player__artist" id="trackArtist">—</span>
+        </div>
+
+        <div class="player__progress">
+          <div class="player__progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="player__controls">
+          <button class="ctrl ctrl--prev" id="prevBtn" aria-label="Previous track">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
+            </svg>
+          </button>
+
+          <button class="ctrl ctrl--play" id="playBtn" aria-label="Play">
+            <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+              <path d="M6 5h4v14H6zm8 0h4v14h-4z" />
+            </svg>
+          </button>
+
+          <button class="ctrl ctrl--next" id="nextBtn" aria-label="Next track">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Configure your deployed sync server URL here -->
+  <script>
+    window.SOCKET_URL = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
+  </script>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="player.js"></script>
+</body>
+
+</html>
