@@ -6,8 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>एकान्त राग — रात्रिकालीन धुन</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -19,14 +20,23 @@
 
   <!-- top bar -->
   <header class="topbar">
+    <!-- Top Left: Clock & Date -->
+    <div class="datetime" id="datetimeDisplay">
+      <span id="currentTime">—:—</span>
+      <span class="datetime__separator">|</span>
+      <span id="currentDate">— — —</span>
+    </div>
+
+    <!-- Top Center: Online Listeners -->
     <div class="listeners" id="listenersBadge" aria-live="polite">
       <span class="listeners__dot"></span>
       <span id="listenersCount">—</span>
       <span class="listeners__label">listening now</span>
     </div>
 
+    <!-- Top Right: YT Music Button -->
     <a class="yt-music-btn" id="ytMusicBtn" href="#" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="12" cy="12" r="12" fill="#FF0000"/>
         <path d="M12 7C9.24 7 7 9.24 7 12C7 14.76 9.24 17 12 17C14.76 17 17 14.76 17 12C17 9.24 14.76 7 12 7ZM12 15.8C9.9 15.8 8.2 14.1 8.2 12C8.2 9.9 9.9 8.2 12 8.2C14.1 8.2 15.8 9.9 15.8 12C15.8 14.1 14.1 15.8 12 15.8Z" fill="white"/>
         <path d="M10.5 9.5V14.5L14.5 12L10.5 9.5Z" fill="white"/>
@@ -81,6 +91,15 @@
           <button class="ctrl ctrl--next" id="nextBtn" aria-label="Next track">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z" />
+            </svg>
+          </button>
+
+          <button class="ctrl ctrl--like" id="likeBtn" aria-label="Like song">
+            <svg class="icon-like-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+            <svg class="icon-like-filled" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px; display: none; color: #ff4a5a;">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
             </svg>
           </button>
         </div>

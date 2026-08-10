@@ -10,6 +10,9 @@
   const progressFill = document.getElementById('progressFill');
   const listenersCount = document.getElementById('listenersCount');
   const ytMusicBtn = document.getElementById('ytMusicBtn');
+  const likeBtn = document.getElementById('likeBtn');
+  const iconLikeOutline = likeBtn.querySelector('.icon-like-outline');
+  const iconLikeFilled = likeBtn.querySelector('.icon-like-filled');
 
   // ---------- State ----------
   let playlist = [];
@@ -48,6 +51,44 @@
     if (discImg) {
       discImg.src = `https://img.youtube.com/vi/${track.youtubeId}/hqdefault.jpg`;
     }
+
+    // Update Like button UI based on local state
+    const likedSongs = getLikedSongs();
+    const isLiked = !!likedSongs[track.youtubeId];
+    setLikeUI(isLiked);
+  }
+
+  // ---------- Local Storage Like Helpers ----------
+  function getLikedSongs() {
+    try {
+      return JSON.parse(localStorage.getItem('liked_songs')) || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveLikedSongs(songs) {
+    localStorage.setItem('liked_songs', JSON.stringify(songs));
+  }
+
+  function setLikeUI(isLiked) {
+    if (!iconLikeOutline || !iconLikeFilled) return;
+    if (isLiked) {
+      iconLikeOutline.style.display = 'none';
+      iconLikeFilled.style.display = '';
+    } else {
+      iconLikeOutline.style.display = '';
+      iconLikeFilled.style.display = 'none';
+    }
+  }
+
+  // ---------- Shuffle helper (Fisher-Yates) ----------
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
   }
 
   // ---------- Load and play track ----------
@@ -104,6 +145,24 @@
   
   prevBtn.addEventListener('click', () => {
     loadTrack(currentIndex - 1);
+  });
+
+  likeBtn.addEventListener('click', () => {
+    if (playlist.length === 0) return;
+    const track = playlist[currentIndex];
+    if (!track) return;
+
+    const likedSongs = getLikedSongs();
+    const isLiked = !likedSongs[track.youtubeId]; // Toggle state
+
+    if (isLiked) {
+      likedSongs[track.youtubeId] = true;
+    } else {
+      delete likedSongs[track.youtubeId];
+    }
+
+    saveLikedSongs(likedSongs);
+    setLikeUI(isLiked);
   });
 
   // Keyboard shortcuts
@@ -169,7 +228,10 @@
       .then(response => response.json())
       .then(data => {
         playlist = data.filter(t => t && t.youtubeId);
-        console.log(`Loaded ${playlist.length} tracks.`);
+        
+        // Shuffle playlist so users hear a different sequence
+        shuffleArray(playlist);
+        console.log(`Loaded and shuffled ${playlist.length} tracks.`);
         
         // If player is already ready, update details of first song
         if (ytReady && playlist.length > 0) {
@@ -191,6 +253,36 @@
         listenersCount.textContent = n;
       });
     }
+
+    // 3. Start clock and date display
+    startClock();
+  }
+
+  // ---------- Clock & Date Updater ----------
+  function startClock() {
+    const timeEl = document.getElementById('currentTime');
+    const dateEl = document.getElementById('currentDate');
+
+    function update() {
+      const now = new Date();
+
+      // Format time: HH:MM
+      let hours = now.getHours();
+      let minutes = now.getMinutes();
+      hours = hours < 10 ? '0' + hours : hours;
+      minutes = minutes < 10 ? '0' + minutes : minutes;
+      if (timeEl) timeEl.textContent = `${hours}:${minutes}`;
+
+      // Format date: DD MMM YYYY (e.g. 10 AUG 2026)
+      const day = now.getDate();
+      const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+      const month = months[now.getMonth()];
+      const year = now.getFullYear();
+      if (dateEl) dateEl.textContent = `${day} ${month} ${year}`;
+    }
+
+    update();
+    setInterval(update, 1000);
   }
 
   // ---------- Start ----------
