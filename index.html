@@ -82,9 +82,9 @@
     </div>
   </footer>
 
-  <!-- Configure your deployed sync server URL here -->
+  <!-- Socket URL: auto-detected from window.location.origin when served via server.js -->
   <script>
-    window.SOCKET_URL = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
+    window.SOCKET_URL = window.location.origin;
   </script>
 
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>

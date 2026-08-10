@@ -8,141 +8,124 @@ require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*" }
+  cors: { origin: '*' }
 });
 
 const PORT = process.env.PORT || 3000;
 
-// Serve static files from the current directory
-app.use(express.static(path.join(__dirname)));
-
-// Fallback to index.html
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// Load playlist
+// ---------- Load playlist from file ----------
 let playlist = [];
 try {
-  const playlistPath = path.join(__dirname, 'playlist.json');
-  if (fs.existsSync(playlistPath)) {
-    playlist = JSON.parse(fs.readFileSync(playlistPath, 'utf8'));
-  }
+  playlist = JSON.parse(fs.readFileSync(path.join(__dirname, 'playlist.json'), 'utf8'));
+  playlist = playlist.filter(t => t && t.youtubeId);
 } catch (e) {
-  console.error("Error reading playlist.json:", e);
+  console.error('Could not read playlist.json:', e.message);
 }
+console.log(`Loaded ${playlist.length} tracks.`);
 
-// Fallback playlist if empty or invalid
-if (!Array.isArray(playlist) || playlist.length === 0) {
-  playlist = [
-    { title: "lofi hip hop radio", artist: "Lofi Girl", youtubeId: "jfKfPfyJRdk", duration: 180 },
-    { title: "chillhop radio", artist: "Chillhop Music", youtubeId: "5yx6BWlEVcU", duration: 180 }
-  ];
-}
+// ---------- Serve static frontend ----------
+app.use(express.static(path.join(__dirname)));
+app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-// Normalize playlist: filter out invalid entries and ensure duration is positive
-playlist = playlist
-  .filter(track => track && track.youtubeId)
-  .map(track => ({
-    title: track.title || "Unknown Title",
-    artist: track.artist || "Unknown Artist",
-    youtubeId: track.youtubeId,
-    duration: track.duration && track.duration > 0 ? track.duration : 180 // default to 3 minutes
-  }));
-
-let streamStartTime = Date.now();
-let transitionTimeout = null;
-
-function getCurrentState() {
-  const totalDuration = playlist.reduce((sum, track) => sum + track.duration, 0);
-  const now = Date.now();
-  let elapsed = (now - streamStartTime) / 1000;
-  
-  let playlistTime = elapsed % totalDuration;
-  if (playlistTime < 0) playlistTime += totalDuration;
-  
-  let accumulated = 0;
-  for (let i = 0; i < playlist.length; i++) {
-    const track = playlist[i];
-    if (playlistTime >= accumulated && playlistTime < accumulated + track.duration) {
-      return {
-        index: i,
-        startedAt: now - (playlistTime - accumulated) * 1000,
-        serverTime: now
-      };
-    }
-    accumulated += track.duration;
-  }
-  
-  return {
-    index: 0,
-    startedAt: now,
-    serverTime: now
-  };
-}
-
-function skipTrack(direction) {
-  const currentState = getCurrentState();
-  const currentIndex = currentState.index;
-  let nextIndex = (currentIndex + direction) % playlist.length;
-  if (nextIndex < 0) nextIndex = playlist.length - 1;
-  
-  let targetAccumulated = 0;
-  for (let i = 0; i < nextIndex; i++) {
-    targetAccumulated += playlist[i].duration;
-  }
-  
-  streamStartTime = Date.now() - (targetAccumulated * 1000);
-}
-
-function scheduleNextTransition() {
-  if (transitionTimeout) clearTimeout(transitionTimeout);
-  
-  const state = getCurrentState();
-  const currentTrack = playlist[state.index];
-  const elapsed = (Date.now() - state.startedAt) / 1000;
-  const remaining = Math.max(0, currentTrack.duration - elapsed);
-  
-  transitionTimeout = setTimeout(() => {
-    io.emit('state', {
-      ...getCurrentState(),
-      serverTime: Date.now()
-    });
-    scheduleNextTransition();
-  }, remaining * 1000);
-}
-
-// Start scheduling
-scheduleNextTransition();
+// ---------- Sync state ----------
+// The server is the authoritative "host". It keeps track of which track
+// is playing and at what timestamp it started. Every client's YouTube
+// player syncs to this state.
+let state = {
+  index: 0,
+  playing: true,
+  startedAt: Date.now(),   // wall-clock ms when the current track began
+  pausedAt: 0              // elapsed seconds into the track when paused
+};
 
 let listeners = 0;
 
+function broadcastState() {
+  io.emit('state', {
+    ...state,
+    serverTime: Date.now(),
+    track: playlist[state.index] || null,
+    playlistLength: playlist.length
+  });
+}
+
+function broadcastListeners() {
+  io.emit('listeners', listeners);
+}
+
+// ---------- Socket.IO ----------
 io.on('connection', (socket) => {
   listeners++;
-  io.emit('listeners', listeners);
-  
-  // Send current state to new listener
-  socket.emit('state', {
-    ...getCurrentState(),
-    serverTime: Date.now()
+  broadcastListeners();
+
+  // Send current state + full playlist to new joiner
+  socket.emit('init', {
+    playlist,
+    state: {
+      ...state,
+      serverTime: Date.now(),
+      track: playlist[state.index] || null,
+      playlistLength: playlist.length
+    }
   });
 
-  // Handle skips
+  // --- Host-reported duration (first client to report sets it) ---
+  socket.on('reportDuration', (data) => {
+    if (data && data.index >= 0 && data.index < playlist.length && data.duration > 0) {
+      if (!playlist[data.index].duration || playlist[data.index].duration <= 0) {
+        playlist[data.index].duration = data.duration;
+        console.log(`Track ${data.index} duration set to ${data.duration}s`);
+      }
+    }
+  });
+
+  // --- Skip (next/prev) ---
   socket.on('skip', (data) => {
-    skipTrack(data.direction);
-    io.emit('state', {
-      ...getCurrentState(),
-      serverTime: Date.now()
-    });
-    scheduleNextTransition();
+    const dir = data && data.direction ? data.direction : 1;
+    state.index = (state.index + dir + playlist.length) % playlist.length;
+    state.startedAt = Date.now();
+    state.pausedAt = 0;
+    state.playing = true;
+    broadcastState();
+  });
+
+  // --- Play/Pause toggle (affects everyone — communal radio) ---
+  socket.on('toggle', () => {
+    if (state.playing) {
+      // Pause: record how far into the track we are
+      state.pausedAt = (Date.now() - state.startedAt) / 1000;
+      state.playing = false;
+    } else {
+      // Resume: adjust startedAt so elapsed calculation stays correct
+      state.startedAt = Date.now() - state.pausedAt * 1000;
+      state.playing = true;
+    }
+    broadcastState();
+  });
+
+  // --- Track ended: auto-advance ---
+  socket.on('trackEnded', () => {
+    state.index = (state.index + 1) % playlist.length;
+    state.startedAt = Date.now();
+    state.pausedAt = 0;
+    state.playing = true;
+    broadcastState();
   });
 
   socket.on('disconnect', () => {
     listeners--;
-    io.emit('listeners', listeners);
+    broadcastListeners();
   });
 });
 
+// ---------- Periodic sync heartbeat ----------
+// Every 2 seconds, broadcast the current state so late-joiners
+// and clients with drift stay in sync.
+setInterval(() => {
+  broadcastState();
+}, 2000);
+
+// ---------- Start ----------
 server.listen(PORT, () => {
-  console.log(`Sync server and static site running on http://localhost:${PORT}`);
+  console.log(`Ekant Raag Radio running → http://localhost:${PORT}`);
 });

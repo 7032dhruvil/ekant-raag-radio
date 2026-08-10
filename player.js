@@ -1,4 +1,5 @@
 (() => {
+  // ---------- DOM refs ----------
   const playBtn = document.getElementById('playBtn');
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
@@ -10,16 +11,20 @@
   const listenersCount = document.getElementById('listenersCount');
   const ytMusicBtn = document.getElementById('ytMusicBtn');
 
+  // ---------- State ----------
   let playlist = [];
   let ytPlayer = null;
   let ytReady = false;
-  let joined = false;          // personal play/pause state — does not affect other visitors
-  let currentState = null;     // last {index, startedAt, serverTime} from the server
-  let loadedIndex = -1;
+  let socket = null;
+
+  let serverState = null;   // latest state from server
+  let loadedVideoId = null;  // videoId currently loaded in the iframe
+  let userJoined = false;    // has user clicked play at least once?
   let progressTimer = null;
 
-  const DRIFT_TOLERANCE_S = 2.5;
+  const DRIFT_TOLERANCE_S = 1.5;
 
+  // ---------- UI helpers ----------
   function setPlayingUI(isPlaying) {
     iconPlay.style.display = isPlaying ? 'none' : '';
     iconPause.style.display = isPlaying ? '' : 'none';
@@ -27,82 +32,124 @@
   }
 
   function updateMeta(track) {
-    titleEl.textContent = track.title;
-    artistEl.textContent = track.artist;
+    if (!track) return;
+    titleEl.textContent = track.title || 'Unknown';
+    artistEl.textContent = track.artist || '';
     ytMusicBtn.href = `https://music.youtube.com/watch?v=${track.youtubeId}`;
   }
 
-  function elapsedFor(state) {
-    return Math.max(0, (Date.now() - state.startedAt) / 1000);
+  // ---------- Elapsed time from server state ----------
+  function getElapsed(st) {
+    if (!st) return 0;
+    if (!st.playing) return st.pausedAt || 0;
+    return Math.max(0, (Date.now() - st.startedAt) / 1000);
   }
 
-  function applyState(state) {
-    currentState = state;
-    const track = playlist[state.index];
+  // ---------- Apply server state to YouTube player ----------
+  function applyState(st) {
+    serverState = st;
+    const track = st.track || (playlist[st.index]);
     if (!track) return;
+
     updateMeta(track);
 
-    if (!ytReady) return; // will apply once the player is ready
+    if (!ytReady) return; // will be applied once onReady fires
 
-    const elapsed = elapsedFor(state);
+    const targetVideoId = track.youtubeId;
+    const elapsed = getElapsed(st);
 
-    if (loadedIndex !== state.index) {
-      loadedIndex = state.index;
-      if (joined) {
-        ytPlayer.loadVideoById({ videoId: track.youtubeId, startSeconds: elapsed });
+    if (loadedVideoId !== targetVideoId) {
+      // New track — load it
+      loadedVideoId = targetVideoId;
+      if (userJoined && st.playing) {
+        ytPlayer.loadVideoById({ videoId: targetVideoId, startSeconds: elapsed });
       } else {
-        ytPlayer.cueVideoById({ videoId: track.youtubeId, startSeconds: elapsed });
+        ytPlayer.cueVideoById({ videoId: targetVideoId, startSeconds: elapsed });
+        setPlayingUI(false);
       }
-    } else if (joined) {
-      // same track — only correct drift beyond tolerance to avoid stutter
-      const local = ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0;
-      if (Math.abs(local - elapsed) > DRIFT_TOLERANCE_S) {
-        ytPlayer.seekTo(elapsed, true);
+    } else if (userJoined) {
+      // Same track — correct drift if needed
+      if (st.playing) {
+        const localTime = ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0;
+        const drift = Math.abs(localTime - elapsed);
+        if (drift > DRIFT_TOLERANCE_S) {
+          ytPlayer.seekTo(elapsed, true);
+        }
+        // Ensure playing
+        const playerState = ytPlayer.getPlayerState ? ytPlayer.getPlayerState() : -1;
+        if (playerState !== YT.PlayerState.PLAYING && playerState !== YT.PlayerState.BUFFERING) {
+          ytPlayer.playVideo();
+        }
+      } else {
+        // Paused by server
+        const playerState = ytPlayer.getPlayerState ? ytPlayer.getPlayerState() : -1;
+        if (playerState === YT.PlayerState.PLAYING) {
+          ytPlayer.pauseVideo();
+        }
+        setPlayingUI(false);
       }
+    } else {
+      // Not joined yet — just show metadata
+      setPlayingUI(false);
     }
   }
 
+  // ---------- Progress bar loop ----------
   function startProgressLoop() {
     clearInterval(progressTimer);
     progressTimer = setInterval(() => {
-      if (!ytReady || !currentState || !joined) return;
-      const track = playlist[currentState.index];
-      const duration = track?.duration || (ytPlayer.getDuration ? ytPlayer.getDuration() : 0);
-      const current = ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0;
-      progressFill.style.width = duration ? `${Math.min(100, (current / duration) * 100)}%` : '0%';
-    }, 500);
+      if (!ytReady || !serverState) return;
+      const duration = (ytPlayer.getDuration && ytPlayer.getDuration() > 0)
+        ? ytPlayer.getDuration()
+        : 240; // fallback 4 min
+      const current = userJoined
+        ? (ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0)
+        : getElapsed(serverState);
+      const pct = duration > 0 ? Math.min(100, (current / duration) * 100) : 0;
+      progressFill.style.width = `${pct}%`;
+    }, 400);
   }
 
-  function join() {
-    joined = true;
-    if (!ytReady || !currentState) return;
-    const track = playlist[currentState.index];
-    const elapsed = elapsedFor(currentState);
-    if (loadedIndex !== currentState.index) {
-      loadedIndex = currentState.index;
+  // ---------- User actions ----------
+  function joinPlayback() {
+    userJoined = true;
+    if (!ytReady || !serverState) return;
+    const track = serverState.track || playlist[serverState.index];
+    if (!track) return;
+
+    const elapsed = getElapsed(serverState);
+    if (loadedVideoId !== track.youtubeId) {
+      loadedVideoId = track.youtubeId;
       ytPlayer.loadVideoById({ videoId: track.youtubeId, startSeconds: elapsed });
     } else {
       ytPlayer.seekTo(elapsed, true);
-      ytPlayer.playVideo();
+      if (serverState.playing) ytPlayer.playVideo();
     }
   }
 
-  function leave() {
-    joined = false;
+  function leavePlayback() {
+    userJoined = false;
     if (ytReady) ytPlayer.pauseVideo();
     setPlayingUI(false);
   }
 
-  playBtn.addEventListener('click', () => (joined ? leave() : join()));
+  // Play/Pause button — toggles your local participation
+  playBtn.addEventListener('click', () => {
+    if (userJoined) {
+      leavePlayback();
+    } else {
+      joinPlayback();
+    }
+  });
 
-  // Next/prev affect the shared stream for everyone — this is one
-  // communal station, not a personal queue.
-  nextBtn.addEventListener('click', () => window.socket?.emit('skip', { direction: 1 }));
-  prevBtn.addEventListener('click', () => window.socket?.emit('skip', { direction: -1 }));
+  // Next/Prev — affects everyone (communal radio)
+  nextBtn.addEventListener('click', () => socket?.emit('skip', { direction: 1 }));
+  prevBtn.addEventListener('click', () => socket?.emit('skip', { direction: -1 }));
 
+  // Keyboard shortcuts
   window.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'BUTTON') return;
-    if (e.code === 'Space') { e.preventDefault(); joined ? leave() : join(); }
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.code === 'Space') { e.preventDefault(); userJoined ? leavePlayback() : joinPlayback(); }
     if (e.code === 'ArrowRight') nextBtn.click();
     if (e.code === 'ArrowLeft') prevBtn.click();
   });
@@ -112,49 +159,97 @@
     ytPlayer = new YT.Player('ytPlayer', {
       width: '200',
       height: '200',
-      playerVars: { controls: 0, disablekb: 1, rel: 0, playsinline: 1, origin: window.location.origin },
+      playerVars: {
+        controls: 0,
+        disablekb: 1,
+        rel: 0,
+        playsinline: 1,
+        origin: window.location.origin,
+        enablejsapi: 1,
+        modestbranding: 1,
+        iv_load_policy: 3  // hide annotations
+      },
       events: {
         onReady: () => {
           ytReady = true;
           startProgressLoop();
-          if (currentState) applyState(currentState);
+          if (serverState) applyState(serverState);
+          console.log('YouTube player ready.');
         },
         onStateChange: (e) => {
-          if (e.data === YT.PlayerState.PLAYING) setPlayingUI(true);
+          if (e.data === YT.PlayerState.PLAYING) {
+            setPlayingUI(true);
+            // Report duration back to server so it knows track length
+            const dur = ytPlayer.getDuration ? ytPlayer.getDuration() : 0;
+            if (dur > 0 && serverState) {
+              socket?.emit('reportDuration', { index: serverState.index, duration: dur });
+            }
+          }
           if (e.data === YT.PlayerState.PAUSED) setPlayingUI(false);
-          if (e.data === YT.PlayerState.ENDED) setPlayingUI(false);
+          if (e.data === YT.PlayerState.ENDED) {
+            setPlayingUI(false);
+            // Tell server to advance to next track
+            socket?.emit('trackEnded');
+          }
         },
-      },
+        onError: (e) => {
+          console.warn('YouTube player error:', e.data);
+          // Auto-skip on error (e.g. geo-blocked video)
+          setTimeout(() => socket?.emit('trackEnded'), 1500);
+        }
+      }
     });
   };
 
-  // ---------- Load catalogue, then connect to the sync server ----------
-  fetch('playlist.json')
-    .then((r) => r.json())
-    .then((data) => {
-      playlist = data.filter((t) => t.youtubeId);
-      if (playlist.length === 0) {
-        titleEl.textContent = 'No tracks configured yet';
-        artistEl.textContent = 'Run resolve-ids.js, then redeploy';
-        return;
-      }
-      connectSocket();
-    });
-
+  // ---------- Connect to sync server ----------
   function connectSocket() {
-    if (!window.SOCKET_URL || window.SOCKET_URL.includes('YOUR-SYNC-SERVER')) {
+    const url = window.SOCKET_URL || window.location.origin;
+
+    if (!url || url.includes('YOUR-SYNC-SERVER')) {
       titleEl.textContent = 'Sync server not configured';
       artistEl.textContent = 'Set window.SOCKET_URL in index.html';
       return;
     }
-    const socket = io(window.SOCKET_URL, { transports: ['websocket'] });
+
+    socket = io(url, { transports: ['websocket', 'polling'] });
     window.socket = socket;
 
-    socket.on('state', applyState);
-    socket.on('listeners', (n) => { listenersCount.textContent = n; });
-    socket.on('connect_error', () => {
+    // Initial handshake — receive playlist + current state
+    socket.on('init', (data) => {
+      if (data.playlist && data.playlist.length > 0) {
+        playlist = data.playlist;
+        console.log(`Received ${playlist.length} tracks from server.`);
+      }
+      if (data.state) {
+        applyState(data.state);
+      }
+    });
+
+    // Ongoing state sync (heartbeat every 2s + on every change)
+    socket.on('state', (data) => {
+      applyState(data);
+    });
+
+    // Listener count
+    socket.on('listeners', (n) => {
+      listenersCount.textContent = n;
+    });
+
+    socket.on('connect', () => {
+      console.log('Connected to sync server.');
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('Socket connection error:', err.message);
       titleEl.textContent = 'Can\u2019t reach sync server';
-      artistEl.textContent = 'Check the server is deployed & running';
+      artistEl.textContent = 'Check the server is running';
+    });
+
+    socket.on('disconnect', () => {
+      console.warn('Disconnected from sync server.');
     });
   }
+
+  // ---------- Start ----------
+  connectSocket();
 })();
