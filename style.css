@@ -175,27 +175,49 @@ body {
   width: 76px;
   height: 76px;
   min-width: 76px;
-  border-radius: 12px;
+  border-radius: 50%;
   overflow: hidden;
-  background: #000;
+  background: #111;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
-.player__video #ytPlayer,
-.player__video iframe {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 200px;
-  height: 200px;
-  transform: translate(-50%, -50%) scale(0.38);
-  transform-origin: center;
+.player__disc {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: spin-disc 20s linear infinite;
+  animation-play-state: paused;
 }
-.player__video-scrim {
+.player__disc.is-playing {
+  animation-play-state: running;
+}
+.player__disc-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.player__disc-center {
   position: absolute;
-  inset: 0;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  pointer-events: none;
+  width: 24%;
+  height: 24%;
+  background: var(--navy-deep);
+  border-radius: 50%;
+  border: 3px solid rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+@keyframes spin-disc {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .player__main {

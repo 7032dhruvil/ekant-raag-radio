@@ -1,27 +1,192 @@
 [
   {
-    "title": "Tum Hi Ho",
+    "title": "Choo Lo",
+    "artist": "The Local Train",
+    "youtubeId": "sFMRqxCexDk"
+  },
+  {
+    "title": "Baarishein",
+    "artist": "Anuv Jain",
+    "youtubeId": "N0ehvcSLMDg"
+  },
+  {
+    "title": "Kasoor",
+    "artist": "Prateek Kuhad",
+    "youtubeId": "EEPKv7ciUQY"
+  },
+  {
+    "title": "Aaoge Tum Kabhi",
+    "artist": "The Local Train",
+    "youtubeId": "i96UO8-GFvw"
+  },
+  {
+    "title": "Alag Aasman",
+    "artist": "Anuv Jain",
+    "youtubeId": "vA86QFrXoho"
+  },
+  {
+    "title": "Liggi",
+    "artist": "Ritviz",
+    "youtubeId": "tis0yVR-keE"
+  },
+  {
+    "title": "cold/mess",
+    "artist": "Prateek Kuhad",
+    "youtubeId": "Il7Nv270zNk"
+  },
+  {
+    "title": "Gul",
+    "artist": "Anuv Jain",
+    "youtubeId": "SmaY7RfBgas"
+  },
+  {
+    "title": "Kadam",
+    "artist": "Prateek Kuhad",
+    "youtubeId": "BaS4VfaR-E0"
+  },
+  {
+    "title": "Waqt Ki Baatein",
+    "artist": "Dream Note",
+    "youtubeId": "b-K4oDRk04M"
+  },
+  {
+    "title": "Dil Mere",
+    "artist": "The Local Train",
+    "youtubeId": "qLCLvzTGFVM"
+  },
+  {
+    "title": "Aa Bhi Ja Aa Bhi Ja",
+    "artist": "Lucky Ali & Sunidhi Chauhan",
+    "youtubeId": "U-OPN6bWl5k"
+  },
+  {
+    "title": "O Sanam",
+    "artist": "Lucky Ali",
+    "youtubeId": "qZgTPiuifBo"
+  },
+  {
+    "title": "Phir Le Aya Dil",
     "artist": "Arijit Singh",
-    "youtubeId": "IJq0yyPvC9I"
+    "youtubeId": "OHqJRf94xrc"
+  },
+  {
+    "title": "Aabaad Barbaad",
+    "artist": "Arijit Singh",
+    "youtubeId": "g7Fn8FRWl2w"
+  },
+  {
+    "title": "Iktara",
+    "artist": "Kavita Seth, Amit Trivedi",
+    "youtubeId": "fSS_R91Nimw"
+  },
+  {
+    "title": "Tu Kisi Rail Si",
+    "artist": "Indian Ocean, Swanand Kirkire",
+    "youtubeId": "zpf8hrbT2d0"
+  },
+  {
+    "title": "Kun Faya Kun",
+    "artist": "A.R. Rahman, Javed Ali, Mohit Chauhan",
+    "youtubeId": "T94PHkuydcw"
+  },
+  {
+    "title": "Safarnama",
+    "artist": "Lucky Ali",
+    "youtubeId": "7mTDBsdfw88"
+  },
+  {
+    "title": "Kabira (Encore)",
+    "artist": "Arijit Singh & Harshdeep Kaur",
+    "youtubeId": "ueRbLSYLrZg"
   },
   {
     "title": "Agar Tum Saath Ho",
     "artist": "Arijit Singh & Alka Yagnik",
-    "youtubeId": "sK7riqg2mr4"
+    "youtubeId": "xRb8hxwN5zc"
   },
   {
-    "title": "Channa Mereya",
-    "artist": "Arijit Singh",
-    "youtubeId": "284Ov7yFfnE"
+    "title": "Yeh Jo Des Hai Tera",
+    "artist": "A.R. Rahman",
+    "youtubeId": "4tiVPuLbbHg"
   },
   {
-    "title": "Kabira",
-    "artist": "Arijit Singh & Tochi Raina",
-    "youtubeId": "jHNNMj5bNQw"
+    "title": "Tune Jo Na Kaha",
+    "artist": "Mohit Chauhan",
+    "youtubeId": "dTu5dTEzVM4"
   },
   {
-    "title": "Ilahi",
-    "artist": "Arijit Singh",
-    "youtubeId": "gvyUuxKsm1o"
+    "title": "Night Changes",
+    "artist": "One Direction",
+    "youtubeId": "syFZfO_wfMQ"
+  },
+  {
+    "title": "Until I Found You",
+    "artist": "Stephen Sanchez",
+    "youtubeId": "GxldQ9eX2wo"
+  },
+  {
+    "title": "As It Was",
+    "artist": "Harry Styles",
+    "youtubeId": "H5v3kku4y6Q"
+  },
+  {
+    "title": "Yellow",
+    "artist": "Coldplay",
+    "youtubeId": "yKNxeF4KMsY"
+  },
+  {
+    "title": "The Night We Met",
+    "artist": "Lord Huron",
+    "youtubeId": "wGF7PswOENQ"
+  },
+  {
+    "title": "Glimpse of Us",
+    "artist": "Joji",
+    "youtubeId": "NgsWGfUlwJI"
+  },
+  {
+    "title": "Fix You",
+    "artist": "Coldplay",
+    "youtubeId": "k4V3Mo61fJM"
+  },
+  {
+    "title": "Heather",
+    "artist": "Conan Gray",
+    "youtubeId": "24u3NoPvgMw"
+  },
+  {
+    "title": "Weightless",
+    "artist": "Marconi Union",
+    "youtubeId": "UfcAVejslrU"
+  },
+  {
+    "title": "Experience",
+    "artist": "Ludovico Einaudi",
+    "youtubeId": "1e9B31FLT-s"
+  },
+  {
+    "title": "Gymnopédie No. 1",
+    "artist": "Erik Satie",
+    "youtubeId": "S-Xm7s9eGxU"
+  },
+  {
+    "title": "River Flows in You",
+    "artist": "Yiruma",
+    "youtubeId": "7maJOI3QMu0"
+  },
+  {
+    "title": "Husn",
+    "artist": "Anuv Jain",
+    "youtubeId": "gJLVTKhTnog"
+  },
+  {
+    "title": "Riha",
+    "artist": "Anuv Jain",
+    "youtubeId": "9et5qzuzbQM"
+  },
+  {
+    "title": "Ocean",
+    "artist": "Anuv Jain",
+    "youtubeId": "Y2zc2IeVX_g"
   }
 ]

@@ -36,6 +36,12 @@
     titleEl.textContent = track.title || 'Unknown';
     artistEl.textContent = track.artist || '';
     ytMusicBtn.href = `https://music.youtube.com/watch?v=${track.youtubeId}`;
+
+    // Update rotating disc image
+    const discImg = document.getElementById('discImg');
+    if (discImg) {
+      discImg.src = `https://img.youtube.com/vi/${track.youtubeId}/hqdefault.jpg`;
+    }
   }
 
   // ---------- Elapsed time from server state ----------
@@ -52,6 +58,16 @@
     if (!track) return;
 
     updateMeta(track);
+
+    // Toggle spinning animation state
+    const discEl = document.getElementById('playerDisc');
+    if (discEl) {
+      if (st.playing && userJoined) {
+        discEl.classList.add('is-playing');
+      } else {
+        discEl.classList.remove('is-playing');
+      }
+    }
 
     if (!ytReady) return; // will be applied once onReady fires
 
@@ -177,17 +193,23 @@
           console.log('YouTube player ready.');
         },
         onStateChange: (e) => {
+          const discEl = document.getElementById('playerDisc');
           if (e.data === YT.PlayerState.PLAYING) {
             setPlayingUI(true);
+            if (discEl) discEl.classList.add('is-playing');
             // Report duration back to server so it knows track length
             const dur = ytPlayer.getDuration ? ytPlayer.getDuration() : 0;
             if (dur > 0 && serverState) {
               socket?.emit('reportDuration', { index: serverState.index, duration: dur });
             }
           }
-          if (e.data === YT.PlayerState.PAUSED) setPlayingUI(false);
+          if (e.data === YT.PlayerState.PAUSED) {
+            setPlayingUI(false);
+            if (discEl) discEl.classList.remove('is-playing');
+          }
           if (e.data === YT.PlayerState.ENDED) {
             setPlayingUI(false);
+            if (discEl) discEl.classList.remove('is-playing');
             // Tell server to advance to next track
             socket?.emit('trackEnded');
           }
