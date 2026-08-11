@@ -33,6 +33,60 @@ body {
   background-repeat: no-repeat;
   z-index: 0;
 }
+/* --- Background Container Styles --- */
+.bg-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -2;
+  background-image: url('bg-2.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Keeps the content aligned near the top */
+  overflow: hidden;
+}
+
+/* Optional subtle overlay to improve contrast against the elements */
+.bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.15); 
+  z-index: -1;
+}
+
+/* --- Centered Top Text Graphic Styling --- */
+.bg-text-image {
+  width: 82%;            /* Responsive width across mobile devices */
+  max-width: 480px;      /* Caps the maximum size nicely for desktop/tablet */
+  height: auto;          /* Maintains crisp visual aspect ratio */
+  object-fit: contain;
+  margin-top: 14vh;      /* Positions it horizontally centered and slightly toward the top */
+  pointer-events: none;  /* Allows click-through events */
+  user-select: none;
+}
+
+/* Media query adaptations for larger viewports */
+@media (min-width: 768px) {
+  .bg-text-image {
+    max-width: 520px;
+    margin-top: 12vh;
+  }
+}
+
+@media (min-width: 1200px) {
+  .bg-text-image {
+    max-width: 580px;
+    margin-top: 10vh;
+  }
+}
 
 .vignette {
   position: fixed;
