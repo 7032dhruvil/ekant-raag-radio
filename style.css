@@ -23,16 +23,17 @@ body {
   background: var(--navy-deep);
   font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   color: var(--paper);
+  background-color: transparent;
 }
 
-.bg {
+/* .bg {
   position: fixed;
   inset: 0;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   z-index: 0;
-}
+} */
 /* --- Background Container Styles --- */
 .bg-container {
   position: fixed;
