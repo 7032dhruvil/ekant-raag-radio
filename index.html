@@ -113,15 +113,8 @@
       </div>
     </div>
 
-    <!-- Top Right: Custom Playlist + YT Music Button -->
+    <!-- Top Right: YT Music Button -->
     <div class="topbar__right">
-      <button class="custom-pl-btn" id="customPlBtn" aria-label="Load custom playlist" title="Play a YouTube playlist">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-          <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
-        </svg>
-        <span>My Playlist</span>
-      </button>
-
       <a class="yt-music-btn" id="ytMusicBtn" href="#" target="_blank" rel="noopener noreferrer" aria-label="YouTube Music">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="12" cy="12" r="12" fill="#FF0000"/>
@@ -206,33 +199,6 @@
       </div>
     </div>
   </footer>
-
-  <!-- Custom Playlist Modal -->
-  <div class="modal-overlay" id="customPlModal" role="dialog" aria-modal="true" aria-label="Load custom playlist" style="display:none">
-    <div class="modal-card">
-      <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
-      <div class="modal-header">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-          <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
-        </svg>
-        <h2>Play a YouTube Playlist</h2>
-      </div>
-      <p class="modal-hint">Paste any <strong>public</strong> YouTube playlist link. The player will load those songs only.</p>
-      <div class="modal-input-row">
-        <input
-          class="modal-input"
-          id="customPlInput"
-          type="url"
-          placeholder="https://www.youtube.com/playlist?list=PL…"
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <button class="modal-load-btn" id="modalLoadBtn">Load</button>
-      </div>
-      <div class="modal-status" id="modalStatus"></div>
-      <p class="modal-note">Supports playlist URLs, watch URLs with a list parameter, and bare playlist IDs.</p>
-    </div>
-  </div>
 
   <!-- Socket URL: auto-detected from window.location.origin when served via server.js -->
   <script>
