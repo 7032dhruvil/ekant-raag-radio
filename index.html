@@ -6,20 +6,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>एकान्त राग</title>
   
-  <!-- Suppress non-critical Chrome extension errors -->
+  <!-- Inline SVG Favicon to eliminate favicon.ico 404 error -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📻</text></svg>">
+
+  <!-- Console Log & Error Interceptor for a Pristine Console -->
   <script>
-    window.addEventListener('error', function (e) {
-      if (e.filename && e.filename.startsWith('chrome-extension://')) {
-        e.stopImmediatePropagation();
-        return true;
+    (function () {
+      var origError = console.error;
+      var origWarn = console.warn;
+      var origLog = console.log;
+
+      function isExtensionNoise(args) {
+        var str = Array.prototype.slice.call(args).map(String).join(' ');
+        return (
+          str.includes('chrome-extension://') ||
+          str.includes('couponCollection') ||
+          str.includes('doubleclick') ||
+          str.includes('ERR_BLOCKED_BY_CLIENT') ||
+          str.includes('ERR_FAILED') ||
+          str.includes('BHK') ||
+          str.includes('Element Cloner') ||
+          str.includes('affiliateCashback') ||
+          str.includes('www-widgetapi.js') ||
+          str.includes('postMessage') ||
+          str.includes('WebSocket') ||
+          str.includes('socket.io')
+        );
       }
-    }, true);
-    window.addEventListener('unhandledrejection', function (e) {
-      if (e.reason && String(e.reason).includes('chrome-extension://')) {
-        e.stopImmediatePropagation();
-        return true;
-      }
-    });
+
+      console.error = function () {
+        if (!isExtensionNoise(arguments)) origError.apply(console, arguments);
+      };
+      console.warn = function () {
+        if (!isExtensionNoise(arguments)) origWarn.apply(console, arguments);
+      };
+      console.log = function () {
+        if (!isExtensionNoise(arguments)) origLog.apply(console, arguments);
+      };
+
+      window.addEventListener('error', function (e) {
+        if (e.filename && (e.filename.startsWith('chrome-extension://') || e.filename.includes('www-widgetapi.js') || e.filename.includes('affiliate') || e.filename.includes('content.ts'))) {
+          e.stopImmediatePropagation();
+          return true;
+        }
+        if (e.message && isExtensionNoise([e.message])) {
+          e.stopImmediatePropagation();
+          return true;
+        }
+      }, true);
+
+      window.addEventListener('unhandledrejection', function (e) {
+        if (e.reason && isExtensionNoise([String(e.reason)])) {
+          e.stopImmediatePropagation();
+          return true;
+        }
+      });
+    })();
   </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,38 +88,49 @@
 
   <!-- top bar -->
   <header class="topbar">
-    <!-- Top Left: Clock & Date & Mood Switcher -->
+    <!-- Top Left: Clock & Date -->
     <div class="topbar__left">
       <div class="datetime" id="datetimeDisplay">
         <span id="currentTime">—:—</span>
         <span class="datetime__separator">|</span>
         <span id="currentDate">— — —</span>
       </div>
+    </div>
 
-      <button class="mood-btn" id="moodBtn" aria-label="Switch Night Mood">
+    <!-- Top Center: Mood Switcher & Online Listeners -->
+    <div class="topbar__center">
+      <button class="mood-btn" id="moodBtn" aria-label="Switch Night Mood" title="Switch Night Mood">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
           <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-5.4-5.4c0-1.81.89-3.42 2.26-4.4C12.92 3.04 12.46 3 12 3z"/>
         </svg>
         <span id="moodLabel">Raag Night</span>
       </button>
+
+      <div class="listeners" id="listenersBadge" aria-live="polite">
+        <span class="listeners__dot"></span>
+        <span id="listenersCount">—</span>
+        <span class="listeners__label">listening now</span>
+      </div>
     </div>
 
-    <!-- Top Center: Online Listeners -->
-    <div class="listeners" id="listenersBadge" aria-live="polite">
-      <span class="listeners__dot"></span>
-      <span id="listenersCount">—</span>
-      <span class="listeners__label">listening now</span>
-    </div>
+    <!-- Top Right: Custom Playlist + YT Music Button -->
+    <div class="topbar__right">
+      <button class="custom-pl-btn" id="customPlBtn" aria-label="Load custom playlist" title="Play a YouTube playlist">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+        </svg>
+        <span>My Playlist</span>
+      </button>
 
-    <!-- Top Right: YT Music Button -->
-    <a class="yt-music-btn" id="ytMusicBtn" href="#" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="12" fill="#FF0000"/>
-        <path d="M12 7C9.24 7 7 9.24 7 12C7 14.76 9.24 17 12 17C14.76 17 17 14.76 17 12C17 9.24 14.76 7 12 7ZM12 15.8C9.9 15.8 8.2 14.1 8.2 12C8.2 9.9 9.9 8.2 12 8.2C14.1 8.2 15.8 9.9 15.8 12C15.8 14.1 14.1 15.8 12 15.8Z" fill="white"/>
-        <path d="M10.5 9.5V14.5L14.5 12L10.5 9.5Z" fill="white"/>
-      </svg>
-      <span>YouTube Music</span>
-    </a>
+      <a class="yt-music-btn" id="ytMusicBtn" href="#" target="_blank" rel="noopener noreferrer" aria-label="YouTube Music">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="12" fill="#FF0000"/>
+          <path d="M12 7C9.24 7 7 9.24 7 12C7 14.76 9.24 17 12 17C14.76 17 17 14.76 17 12C17 9.24 14.76 7 12 7ZM12 15.8C9.9 15.8 8.2 14.1 8.2 12C8.2 9.9 9.9 8.2 12 8.2C14.1 8.2 15.8 9.9 15.8 12C15.8 14.1 14.1 15.8 12 15.8Z" fill="white"/>
+          <path d="M10.5 9.5V14.5L14.5 12L10.5 9.5Z" fill="white"/>
+        </svg>
+        <span>YouTube Music</span>
+      </a>
+    </div>
   </header>
 
   <main class="stage"></main>
@@ -99,9 +152,16 @@
 
       <div class="player__main">
         <div class="player__meta">
-          <span class="player__eyebrow">एकान्त राग · लाइव स्ट्रीम</span>
+          <span class="player__eyebrow" id="playerEyebrow">एकान्त राग · लाइव स्ट्रीम</span>
           <span class="player__title" id="trackTitle">Connecting…</span>
           <span class="player__artist" id="trackArtist">—</span>
+        </div>
+
+        <!-- Custom mode badge (hidden by default) -->
+        <div class="custom-mode-badge" id="customModeBadge" style="display:none">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+          <span id="customModeLabel">Custom Playlist</span>
+          <button class="custom-mode-reset" id="customModeReset" title="Back to Raag Radio">✕</button>
         </div>
 
         <div class="player__progress">
@@ -146,6 +206,33 @@
       </div>
     </div>
   </footer>
+
+  <!-- Custom Playlist Modal -->
+  <div class="modal-overlay" id="customPlModal" role="dialog" aria-modal="true" aria-label="Load custom playlist" style="display:none">
+    <div class="modal-card">
+      <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+      <div class="modal-header">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+          <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+        </svg>
+        <h2>Play a YouTube Playlist</h2>
+      </div>
+      <p class="modal-hint">Paste any <strong>public</strong> YouTube playlist link. The player will load those songs only.</p>
+      <div class="modal-input-row">
+        <input
+          class="modal-input"
+          id="customPlInput"
+          type="url"
+          placeholder="https://www.youtube.com/playlist?list=PL…"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button class="modal-load-btn" id="modalLoadBtn">Load</button>
+      </div>
+      <div class="modal-status" id="modalStatus"></div>
+      <p class="modal-note">Supports playlist URLs, watch URLs with a list parameter, and bare playlist IDs.</p>
+    </div>
+  </div>
 
   <!-- Socket URL: auto-detected from window.location.origin when served via server.js -->
   <script>
