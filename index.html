@@ -6,115 +6,63 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>एकान्त राग</title>
   
-  <!-- Console Noise Suppressor — intercepts ALL console output to filter browser extension spam -->
+  <!-- Inline SVG Favicon to eliminate favicon.ico 404 error -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📻</text></svg>">
+
+  <!-- Console Log & Error Interceptor for a Pristine Console -->
   <script>
     (function () {
-      // Grab originals immediately (we are the first script in <head>)
-      var _log   = console.log;
-      var _warn  = console.warn;
-      var _error = console.error;
-      var _info  = console.info;
-      var _debug = console.debug;
-      var _trace = console.trace;
+      var origError = console.error;
+      var origWarn = console.warn;
+      var origLog = console.log;
 
-      // Keywords that indicate third-party extension / ad-blocker / YouTube widget noise
-      var noiseKeywords = [
-        'chrome-extension://',
-        'moz-extension://',
-        'couponCollection',
-        'doubleclick',
-        'ERR_BLOCKED_BY_CLIENT',
-        'ERR_FAILED',
-        'BHK',
-        'Element Cloner',
-        'affiliateCashback',
-        'injector-main',
-        'content.ts',
-        'www-widgetapi',
-        'postMessage',
-        'target origin',
-        'WebSocket',
-        'socket.io',
-        'Violation',
-        'non-passive',
-        'Content Security Policy',
-        'widget sdk',
-        'missing/invalid publicKey',
-        'merchantId'
-      ];
-
-      function isNoise(args) {
-        try {
-          var str = '';
-          for (var i = 0; i < args.length; i++) {
-            var a = args[i];
-            str += (typeof a === 'object' ? JSON.stringify(a) : String(a)) + ' ';
-          }
-          for (var k = 0; k < noiseKeywords.length; k++) {
-            if (str.indexOf(noiseKeywords[k]) !== -1) return true;
-          }
-        } catch (_) {}
-        return false;
+      function isExtensionNoise(args) {
+        var str = Array.prototype.slice.call(args).map(String).join(' ');
+        return (
+          str.includes('chrome-extension://') ||
+          str.includes('couponCollection') ||
+          str.includes('doubleclick') ||
+          str.includes('ERR_BLOCKED_BY_CLIENT') ||
+          str.includes('ERR_FAILED') ||
+          str.includes('BHK') ||
+          str.includes('Element Cloner') ||
+          str.includes('affiliateCashback') ||
+          str.includes('www-widgetapi.js') ||
+          str.includes('postMessage') ||
+          str.includes('WebSocket') ||
+          str.includes('socket.io')
+        );
       }
 
-      function wrap(orig) {
-        return function () { if (!isNoise(arguments)) orig.apply(console, arguments); };
-      }
-
-      // Override and freeze so extensions can't restore the originals
-      var overrides = {
-        log:   wrap(_log),
-        warn:  wrap(_warn),
-        error: wrap(_error),
-        info:  wrap(_info),
-        debug: wrap(_debug),
-        trace: wrap(_trace)
+      console.error = function () {
+        if (!isExtensionNoise(arguments)) origError.apply(console, arguments);
+      };
+      console.warn = function () {
+        if (!isExtensionNoise(arguments)) origWarn.apply(console, arguments);
+      };
+      console.log = function () {
+        if (!isExtensionNoise(arguments)) origLog.apply(console, arguments);
       };
 
-      for (var method in overrides) {
-        try {
-          Object.defineProperty(console, method, {
-            value: overrides[method],
-            writable: false,
-            configurable: false
-          });
-        } catch (_) {
-          console[method] = overrides[method];
-        }
-      }
-
-      // Suppress window-level error events from extensions
       window.addEventListener('error', function (e) {
-        var src = e.filename || '';
-        var msg = e.message || '';
-        if (
-          src.indexOf('chrome-extension://') !== -1 ||
-          src.indexOf('moz-extension://') !== -1 ||
-          src.indexOf('www-widgetapi') !== -1 ||
-          src.indexOf('affiliate') !== -1 ||
-          src.indexOf('injector') !== -1 ||
-          src.indexOf('content.ts') !== -1 ||
-          isNoise([msg])
-        ) {
-          e.preventDefault();
+        if (e.filename && (e.filename.startsWith('chrome-extension://') || e.filename.includes('www-widgetapi.js') || e.filename.includes('affiliate') || e.filename.includes('content.ts'))) {
           e.stopImmediatePropagation();
-          return false;
+          return true;
+        }
+        if (e.message && isExtensionNoise([e.message])) {
+          e.stopImmediatePropagation();
+          return true;
         }
       }, true);
 
-      // Suppress unhandled promise rejections from extensions
       window.addEventListener('unhandledrejection', function (e) {
-        if (e.reason && isNoise([String(e.reason)])) {
-          e.preventDefault();
+        if (e.reason && isExtensionNoise([String(e.reason)])) {
           e.stopImmediatePropagation();
-          return false;
+          return true;
         }
-      }, true);
+      });
     })();
   </script>
-
-  <!-- Inline SVG Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📻</text></svg>">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
