@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const compression = require('compression');
 require('dotenv').config();
 
 const app = express();
@@ -12,8 +13,13 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
-// ---------- Serve static frontend ----------
-app.use(express.static(path.join(__dirname)));
+// ---------- Enable compression & static caching ----------
+app.use(compression());
+app.use(express.static(path.join(__dirname), {
+  maxAge: '1d',
+  etag: true
+}));
+
 app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 let listeners = 0;

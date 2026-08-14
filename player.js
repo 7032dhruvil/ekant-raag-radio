@@ -178,12 +178,12 @@
     ytPlayer = new YT.Player('ytPlayer', {
       width: '200',
       height: '200',
+      host: 'https://www.youtube.com',
       playerVars: {
         controls: 0,
         disablekb: 1,
         rel: 0,
         playsinline: 1,
-        origin: window.location.origin,
         enablejsapi: 1,
         modestbranding: 1,
         iv_load_policy: 3
@@ -198,7 +198,6 @@
             updateMeta(track);
             ytPlayer.cueVideoById(track.youtubeId);
           }
-          console.log('YouTube player ready.');
         },
         onStateChange: (e) => {
           if (e.data === YT.PlayerState.PLAYING) {
@@ -212,8 +211,7 @@
             loadTrack(currentIndex + 1);
           }
         },
-        onError: (e) => {
-          console.warn('YouTube player error:', e.data);
+        onError: () => {
           // Auto-skip on error (e.g. geo-blocked video)
           setTimeout(() => loadTrack(currentIndex + 1), 1500);
         }
@@ -231,7 +229,6 @@
         
         // Shuffle playlist so users hear a different sequence
         shuffleArray(playlist);
-        console.log(`Loaded and shuffled ${playlist.length} tracks.`);
         
         // If player is already ready, update details of first song
         if (ytReady && playlist.length > 0) {
@@ -240,9 +237,8 @@
           ytPlayer.cueVideoById(track.youtubeId);
         }
       })
-      .catch(err => {
-        console.error('Error fetching playlist:', err);
-        titleEl.textContent = 'Playlist error';
+      .catch(() => {
+        if (titleEl) titleEl.textContent = 'Playlist error';
       });
 
     // 2. Connect socket for the online users count
