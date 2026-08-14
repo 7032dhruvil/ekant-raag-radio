@@ -24,9 +24,13 @@ const PORT = process.env.PORT || 3000;
 const YT_API_KEY = process.env.YOUTUBE_API_KEY || '';
 
 // ---------- Security: Helmet HTTP headers ----------
+const isProd = process.env.NODE_ENV === 'production';
+
 app.use(
   helmet({
-    contentSecurityPolicy: {
+    // CSP: only enforce in production — in dev it causes noisy console violations
+    // from source maps, browser extensions, and YouTube iframe ad requests
+    contentSecurityPolicy: isProd ? {
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: [
@@ -37,18 +41,26 @@ app.use(
           'https://s.ytimg.com'
         ],
         frameSrc: ['https://www.youtube.com', 'https://www.youtube-nocookie.com'],
-        imgSrc: ["'self'", 'https://img.youtube.com', 'data:'],
-        connectSrc: ["'self'", 'https://www.googleapis.com', 'wss:', 'ws:'],
+        imgSrc: ["'self'", 'https://img.youtube.com', 'https://*.ytimg.com', 'data:'],
+        connectSrc: [
+          "'self'",
+          'https://www.googleapis.com',
+          'https://cdn.socket.io',
+          'https://*.google.com',
+          'https://*.doubleclick.net',
+          'https://*.googlevideo.com',
+          'wss:',
+          'ws:'
+        ],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         mediaSrc: ["'self'", 'blob:'],
         objectSrc: ["'none'"],
+        workerSrc: ["'self'", 'blob:'],
         upgradeInsecureRequests: []
       }
-    },
-    hsts: process.env.NODE_ENV === 'production'
-      ? { maxAge: 31536000, includeSubDomains: true }
-      : false,
+    } : false,
+    hsts: isProd ? { maxAge: 31536000, includeSubDomains: true } : false,
     crossOriginEmbedderPolicy: false // Required for YouTube iframe
   })
 );
