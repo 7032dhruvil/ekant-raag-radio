@@ -38,7 +38,7 @@ app.use(
         ],
         frameSrc: ['https://www.youtube.com', 'https://www.youtube-nocookie.com'],
         imgSrc: ["'self'", 'https://img.youtube.com', 'data:'],
-        connectSrc: ["'self'", 'https://www.googleapis.com', 'wss:', 'ws:'],
+        connectSrc: ["'self'", 'https://www.googleapis.com', 'https://cdn.socket.io', 'wss:', 'ws:'],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         mediaSrc: ["'self'", 'blob:'],
