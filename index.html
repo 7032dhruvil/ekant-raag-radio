@@ -5,6 +5,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>एकान्त राग</title>
+  
+  <!-- Suppress non-critical Chrome extension errors -->
+  <script>
+    window.addEventListener('error', function (e) {
+      if (e.filename && e.filename.startsWith('chrome-extension://')) {
+        e.stopImmediatePropagation();
+        return true;
+      }
+    }, true);
+    window.addEventListener('unhandledrejection', function (e) {
+      if (e.reason && String(e.reason).includes('chrome-extension://')) {
+        e.stopImmediatePropagation();
+        return true;
+      }
+    });
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.youtube.com">
@@ -17,6 +34,9 @@
 
 <body>
 
+  <!-- Starlight Canvas Layer -->
+  <canvas id="starCanvas"></canvas>
+
   <!-- Background Wrapper -->
   <div class="bg-container">
     <div class="bg-overlay"></div>
@@ -26,11 +46,20 @@
 
   <!-- top bar -->
   <header class="topbar">
-    <!-- Top Left: Clock & Date -->
-    <div class="datetime" id="datetimeDisplay">
-      <span id="currentTime">—:—</span>
-      <span class="datetime__separator">|</span>
-      <span id="currentDate">— — —</span>
+    <!-- Top Left: Clock & Date & Mood Switcher -->
+    <div class="topbar__left">
+      <div class="datetime" id="datetimeDisplay">
+        <span id="currentTime">—:—</span>
+        <span class="datetime__separator">|</span>
+        <span id="currentDate">— — —</span>
+      </div>
+
+      <button class="mood-btn" id="moodBtn" aria-label="Switch Night Mood">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+          <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-5.4-5.4c0-1.81.89-3.42 2.26-4.4C12.92 3.04 12.46 3 12 3z"/>
+        </svg>
+        <span id="moodLabel">Raag Night</span>
+      </button>
     </div>
 
     <!-- Top Center: Online Listeners -->
@@ -60,10 +89,11 @@
         <!-- Invisible YouTube Iframe Container -->
         <div id="ytPlayer" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;"></div>
         
-        <!-- Rotating Instagram/Vinyl Disc -->
+        <!-- Rotating Instagram/Vinyl Disc with Glare -->
         <div class="player__disc" id="playerDisc">
           <img class="player__disc-img" id="discImg" src="bg-2.png" alt="Song Cover">
           <div class="player__disc-center"></div>
+          <div class="player__disc-glare"></div>
         </div>
       </div>
 
@@ -85,14 +115,18 @@
             </svg>
           </button>
 
-          <button class="ctrl ctrl--play" id="playBtn" aria-label="Play">
-            <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-            <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none">
-              <path d="M6 5h4v14H6zm8 0h4v14h-4z" />
-            </svg>
-          </button>
+          <!-- Play Button with Pulsing Ambient Aura -->
+          <div class="ctrl--play-wrapper" id="playWrapper">
+            <div class="play-aura"></div>
+            <button class="ctrl ctrl--play" id="playBtn" aria-label="Play">
+              <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+                <path d="M6 5h4v14H6zm8 0h4v14h-4z" />
+              </svg>
+            </button>
+          </div>
 
           <button class="ctrl ctrl--next" id="nextBtn" aria-label="Next track">
             <svg viewBox="0 0 24 24" fill="currentColor">

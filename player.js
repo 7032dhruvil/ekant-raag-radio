@@ -38,6 +38,15 @@
         discEl.classList.remove('is-playing');
       }
     }
+
+    const playWrapper = document.getElementById('playWrapper');
+    if (playWrapper) {
+      if (playing) {
+        playWrapper.classList.add('is-playing');
+      } else {
+        playWrapper.classList.remove('is-playing');
+      }
+    }
   }
 
   function updateMeta(track) {
@@ -56,6 +65,93 @@
     const likedSongs = getLikedSongs();
     const isLiked = !!likedSongs[track.youtubeId];
     setLikeUI(isLiked);
+  }
+
+  // ---------- Aesthetic Features: Starlight, Night Mood, Vinyl Physics ----------
+  function initStarlightCanvas() {
+    const canvas = document.getElementById('starCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+
+    for (let i = 0; i < 75; i++) {
+      stars.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        r: Math.random() * 1.5 + 0.4,
+        alpha: Math.random() * 0.7 + 0.3,
+        dx: (Math.random() - 0.5) * 0.12,
+        dy: (Math.random() - 0.5) * 0.12,
+        twinkle: Math.random() * 0.02 + 0.005
+      });
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      for (let s of stars) {
+        s.x += s.dx;
+        s.y += s.dy;
+        if (s.x < 0) s.x = width;
+        if (s.x > width) s.x = 0;
+        if (s.y < 0) s.y = height;
+        if (s.y > height) s.y = 0;
+
+        s.alpha += Math.sin(Date.now() * s.twinkle) * 0.008;
+        ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0.15, Math.min(0.85, s.alpha))})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+  }
+
+  function initMoodSwitcher() {
+    const moodBtn = document.getElementById('moodBtn');
+    const moodLabel = document.getElementById('moodLabel');
+    if (!moodBtn || !moodLabel) return;
+
+    const moods = [
+      { name: 'Raag Night', class: '' },
+      { name: 'Aurora Night', class: 'mood-aurora' },
+      { name: 'Cosmic Night', class: 'mood-cosmos' }
+    ];
+    let currentMoodIdx = 0;
+
+    moodBtn.addEventListener('click', () => {
+      if (moods[currentMoodIdx].class) {
+        document.body.classList.remove(moods[currentMoodIdx].class);
+      }
+      currentMoodIdx = (currentMoodIdx + 1) % moods.length;
+      const nextMood = moods[currentMoodIdx];
+      if (nextMood.class) {
+        document.body.classList.add(nextMood.class);
+      }
+      moodLabel.textContent = nextMood.name;
+    });
+  }
+
+  function initVinylPhysics() {
+    const disc = document.getElementById('playerDisc');
+    if (!disc) return;
+    disc.addEventListener('mousemove', (e) => {
+      const rect = disc.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      disc.style.transform = `rotateX(${(-y / 8).toFixed(1)}deg) rotateY(${(x / 8).toFixed(1)}deg)`;
+    });
+    disc.addEventListener('mouseleave', () => {
+      disc.style.transform = '';
+    });
   }
 
   // ---------- Local Storage Like Helpers ----------
@@ -252,6 +348,11 @@
 
     // 3. Start clock and date display
     startClock();
+
+    // 4. Initialize aesthetic features (Starlight Canvas, Night Mood Switcher, Vinyl Physics)
+    initStarlightCanvas();
+    initMoodSwitcher();
+    initVinylPhysics();
   }
 
   // ---------- Clock & Date Updater ----------
